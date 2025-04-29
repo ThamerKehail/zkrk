@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:zkrk/helper/binding.dart';
 import 'package:zkrk/helper/color.dart';
+import 'package:zkrk/view/athkar/azkar.dart';
 import 'package:zkrk/view/home/screens/audio_screen.dart';
 import 'package:zkrk/view/prayer/prayer_time.dart';
+import 'package:zkrk/view/qibla/qibla.dart';
 
 import '../../../core/viewmodel/home_viewmodel.dart';
 import '../../../helper/sliver_appbar_delegate.dart';
@@ -134,7 +136,12 @@ class HomeScreen extends GetView<HomeController> {
                         );
                       },
                     ),
-                    _buildMenuItem('القبلة'),
+                    _buildMenuItem(
+                      'القبلة',
+                      onTap: () {
+                        Get.to(() => QiblaFinderPage());
+                      },
+                    ),
                     _buildMenuItem('المفضلة'),
                     _buildMenuItem('العداد'),
                   ],
@@ -143,15 +150,84 @@ class HomeScreen extends GetView<HomeController> {
             ),
           ),
           SliverToBoxAdapter(
-            child: Column(
-              children: [
-                Container(height: 150, width: 400, color: Color(0xFF2F4770)),
-                Container(height: 150, width: 400, color: Color(0xFF2F4770)),
-                Container(height: 150, width: 400, color: Color(0xFF2F4770)),
-                Container(height: 150, width: 400, color: Color(0xFF2F4770)),
-                Container(height: 150, width: 400, color: Color(0xFF2F4770)),
-                Container(height: 150, width: 400, color: Color(0xFF2F4770)),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 12,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      alignment: WrapAlignment.spaceBetween,
+                      runAlignment: WrapAlignment.start,
+
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Get.to(() => AzkarPage());
+                          },
+                          child: Container(
+                            width: MediaQuery.of(context).size.width / 2.3,
+                            padding: EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 8,
+                            ),
+
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: secondPrimaryColor,
+                                width: 3,
+                              ),
+                            ),
+                            child: Text(
+                              "أذكار الصباح ",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: MediaQuery.of(context).size.width / 2.3,
+                          padding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 8,
+                          ),
+
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: secondPrimaryColor,
+                              width: 3,
+                            ),
+                          ),
+                          child: Text(
+                            "أذكار الصباح",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(height: 150, width: 400, color: Color(0xFF2F4770)),
+                  Container(height: 150, width: 400, color: Color(0xFF2F4770)),
+                  Container(height: 150, width: 400, color: Color(0xFF2F4770)),
+                  Container(height: 150, width: 400, color: Color(0xFF2F4770)),
+                  Container(height: 150, width: 400, color: Color(0xFF2F4770)),
+                ],
+              ),
             ),
           ),
         ],

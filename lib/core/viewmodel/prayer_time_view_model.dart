@@ -1,21 +1,21 @@
+import 'dart:async';
+
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:convert';
-
 import '../../model/prayer_model.dart';
-import 'location_viewmodel.dart';
 
 class PrayerTimeController extends GetxController {
-  late LocationController locationController;
-  late double latitude;
-  late double longitude;
+  var city = '...'.obs;
+  RxDouble latitude = 0.0.obs;
+  RxDouble longitude = 0.0.obs;
+  late Timer _timer;
+  final remainingTime = ''.obs;
+  late DateTime prayerTime;
 
-  PrayerTimeController() {
-    locationController = Get.find<LocationController>();
-    latitude = locationController.latitude.value;
-    longitude = locationController.longitude.value;
-  }
   var prayerTimes = PrayerModel().obs;
 
   Rx<String> nextPrayer = ''.obs;
@@ -24,11 +24,53 @@ class PrayerTimeController extends GetxController {
   var nextPrayerTimesMap = <String, String>{}.obs;
   var nextPrayerDuration = ''.obs;
 
+  String nowDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+
   @override
   onInit() {
     super.onInit();
-    getPrayerTimes(24.807290, 46.617737, "28-04-2025");
+    _getUserLocation();
   }
+
+  void startTimer(DateTime targetTime) {
+    prayerTime = targetTime;
+
+    _updateRemainingTime();
+    _timer = Timer.periodic(Duration(seconds: 1), (_) {
+      _updateRemainingTime();
+    });
+  }
+
+  DateTime _convertTimeStringToDateTime(String time) {
+    final now = DateTime.now();
+    final parts = time.split(":");
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+
+    return DateTime(now.year, now.month, now.day, hour, minute);
+  }
+
+  void _updateRemainingTime() {
+    final now = DateTime.now();
+    final difference = prayerTime.difference(now);
+
+    if (difference.isNegative) {
+      remainingTime.value = "Prayer time passed";
+      _timer.cancel();
+    } else {
+      final hours = difference.inHours.toString().padLeft(2, '0');
+      final minutes = (difference.inMinutes % 60).toString().padLeft(2, '0');
+      final seconds = (difference.inSeconds % 60).toString().padLeft(2, '0');
+      remainingTime.value = "$hours:$minutes:$seconds";
+    }
+  }
+
+  @override
+  void onClose() {
+    _timer.cancel();
+    super.onClose();
+  }
+
   // Store the prayer times
 
   // Fetch prayer times from the API based on latitude and longitude
@@ -58,6 +100,46 @@ class PrayerTimeController extends GetxController {
     }
   }
 
+  Future<void> _getUserLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      city.value = 'Location service is disabled';
+      return;
+    }
+
+    // Check location permission
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        city.value = 'Location permission denied';
+        return;
+      }
+    }
+
+    // Get current position
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+    latitude.value = position.latitude;
+    longitude.value = position.longitude;
+
+    // Convert coordinates to city name
+    List<Placemark> placemarks = await placemarkFromCoordinates(
+      position.latitude,
+      position.longitude,
+    );
+
+    city.value = placemarks.first.locality ?? 'City not found';
+
+    await getPrayerTimes(latitude.value, longitude.value, nowDate);
+  }
+
   Future<void> getNextPrayer(
     double latitude,
     double longitude,
@@ -79,6 +161,8 @@ class PrayerTimeController extends GetxController {
         nextPrayer.value = convertToArabic(nextPrayer.value);
         nextPrayerTime.value = nextPrayerTimesMap.values.first;
         print("nextPrayer=======$nextPrayer");
+
+        startTimer(_convertTimeStringToDateTime(nextPrayerTime.value));
 
         // Parsing the prayer times from the response
         // prayerTimes.value = prayer;
@@ -103,7 +187,7 @@ class PrayerTimeController extends GetxController {
         final data = json.decode(response.body);
         // print(date);
 
-        var prayer = await PrayerModel.fromJson(data["data"]["timings"]);
+        var prayer = await PrayerModel.fromJson(data["data"]);
         // print("prayer=======$prayer");
 
         // Parsing the prayer times from the response
