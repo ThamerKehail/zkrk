@@ -7,7 +7,7 @@ class AzkarController extends GetxController {
   RxBool _isLoading = false.obs;
   RxBool get isLoading => _isLoading;
 
-  List<AzkarModel> azkar = [];
+  var azkar = <AzkarModel>[].obs;
 
   RxInt counter = 0.obs;
   var counters = <RxInt?>[].obs;

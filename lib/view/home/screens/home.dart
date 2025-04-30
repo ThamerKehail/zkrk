@@ -9,6 +9,7 @@ import 'package:zkrk/view/qibla/qibla.dart';
 
 import '../../../core/viewmodel/home_viewmodel.dart';
 import '../../../helper/sliver_appbar_delegate.dart';
+import '../../counter/counter.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -131,7 +132,7 @@ class HomeScreen extends GetView<HomeController> {
                       onTap: () {
                         Get.to(
                           () => PrayerTimesScreen(),
-                          binding: Binding(),
+
                           preventDuplicates: true,
                         );
                       },
@@ -143,7 +144,10 @@ class HomeScreen extends GetView<HomeController> {
                       },
                     ),
                     _buildMenuItem('المفضلة'),
-                    _buildMenuItem('العداد'),
+                    _buildMenuItem(
+                      'العداد',
+                      onTap: () => Get.to(CounterScreen()),
+                    ),
                   ],
                 ),
               ),

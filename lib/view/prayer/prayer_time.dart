@@ -7,13 +7,11 @@ import 'package:zkrk/view/prayer/widgets/small_tile.dart';
 import '../../core/viewmodel/prayer_time_view_model.dart';
 
 class PrayerTimesScreen extends StatelessWidget {
-  const PrayerTimesScreen({super.key});
+  PrayerTimesScreen({super.key});
+  final PrayerTimeController prayerTimeController = Get.find();
 
   @override
   Widget build(BuildContext context) {
-    final PrayerTimeController prayerTimeController =
-        Get.find<PrayerTimeController>();
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
