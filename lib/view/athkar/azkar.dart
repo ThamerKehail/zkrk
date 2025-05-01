@@ -3,11 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:zkrk/helper/color.dart';
 import '../../core/viewmodel/azkar_viewmodel.dart';
+import '../../model/azkar_model.dart';
 
-class AzkarPage extends StatelessWidget {
+class AzkarPage extends StatefulWidget {
+  final List<AzkarItem> azkar;
+  final String title;
+
+  AzkarPage({super.key, required this.azkar, required this.title});
+
+  @override
+  State<AzkarPage> createState() => _AzkarPageState();
+}
+
+class _AzkarPageState extends State<AzkarPage> {
   final AzkarController controller = Get.find();
+  @override
+  void initState() {
+    controller.loadAzkar(widget.azkar);
 
-  AzkarPage({super.key});
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,10 +30,7 @@ class AzkarPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
-        title: const Text(
-          "أذكار الصباح",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: Text(widget.title, style: TextStyle(color: Colors.white)),
         centerTitle: true,
         leading: IconButton(
           onPressed: () {
@@ -28,135 +40,158 @@ class AzkarPage extends StatelessWidget {
         ),
         // actions: [Icon(Icons.arrow_forward_ios, color: Colors.white)],
       ),
-      bottomNavigationBar: Obx(
-        () =>
-            controller.isCounter.value
-                ? Container(
-                  height: 100,
-                  width: double.infinity,
-                  color: secondPrimaryColor,
-                  child: Center(
-                    child: GestureDetector(
-                      onTap:
-                          controller.isDone(controller.currentIndex)
-                              ? null
-                              : () => controller.incrementCounter(
-                                controller.currentIndex,
-                              ),
-                      child: Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${controller.counters[controller.currentIndex]?.value}',
-                            style: TextStyle(color: Colors.grey, fontSize: 25),
-                          ),
-                        ),
+
+      bottomNavigationBar: Container(
+        height: 100,
+        width: double.infinity,
+        color: secondPrimaryColor,
+
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              onPressed: () {
+                controller.togglePlay(
+                  controller.azkar[controller.currentIndex.value].audio,
+                );
+              },
+              icon: Obx(
+                () => Icon(
+                  controller.isPlaying.value ? Icons.pause : Icons.play_arrow,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Center(
+              child: Obx(
+                () => Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 50,
+                      height: 50,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        backgroundColor: Colors.grey,
+                        strokeWidth: 2,
+                        value:
+                            (controller
+                                .counters[controller.currentIndex.value]
+                                ?.value)! /
+                            controller
+                                .azkar[controller.currentIndex.value]
+                                .count,
                       ),
                     ),
-                  ),
-                )
-                : SizedBox(),
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${controller.counters[controller.currentIndex.value]?.value}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {},
+              icon: Icon(Icons.ios_share, color: Colors.white),
+            ),
+          ],
+        ),
       ),
       body: Obx(
         () =>
             controller.isLoading.value == true
                 ? Center(child: CircularProgressIndicator())
-                : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      color: secondPrimaryColor,
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: Text(
-                        "العصر بعد 1:58:16",
-                        style: TextStyle(
-                          color: Colors.yellowAccent,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                : GestureDetector(
+                  onTap: () => controller.pressZekr(),
+
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        color: secondPrimaryColor,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: Text(
+                          "العصر بعد 1:58:16",
+                          style: TextStyle(
+                            color: Colors.yellowAccent,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: PageView.builder(
-                        scrollDirection: Axis.horizontal,
+                      const SizedBox(height: 20),
+                      Expanded(
+                        child: PageView.builder(
+                          controller: controller.pageController,
+                          scrollDirection: Axis.horizontal,
 
-                        itemCount: controller.azkar.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  controller.azkar[index].title ?? "",
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 25,
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                Text(
-                                  controller.azkar[index].zekr ?? "",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                                const SizedBox(height: 40),
-                                Text(
-                                  controller.azkar[index].subTitle ?? "",
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                Text(
-                                  controller.azkar[index].aya ?? "",
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                Divider(),
-                                const SizedBox(height: 8),
-                                Center(
-                                  child: Text(
-                                    "ثلاث مرات",
-
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
+                          itemCount: controller.azkar.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Text(
+                                    //   controller.azkar[index].text ?? "",
+                                    //   style: TextStyle(
+                                    //     color: Colors.blue,
+                                    //     fontWeight: FontWeight.bold,
+                                    //     fontSize: 25,
+                                    //   ),
+                                    // ),
+                                    // const SizedBox(height: 20),
+                                    Text(
+                                      controller.azkar[index].text ?? "",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                      ),
                                     ),
-                                  ),
+
+                                    const SizedBox(height: 20),
+                                    Divider(),
+                                    const SizedBox(height: 8),
+                                    Center(
+                                      child: Text(
+                                        controller.numberToArabicTimes(
+                                          controller.azkar[index].count,
+                                        ),
+
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          );
-                        },
-                        onPageChanged: (index) {
-                          controller.changeIndex(index);
-                          controller.resetCounter();
-                          controller.checkIsCounter();
-                        },
+                              ),
+                            );
+                          },
+                          onPageChanged: (index) {
+                            controller.changeIndex(index);
+                            controller.resetCounter(index + 1);
+                            // controller.checkIsCounter();
+                          },
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
       ),
     );

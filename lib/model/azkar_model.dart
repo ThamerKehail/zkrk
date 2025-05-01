@@ -1,28 +1,57 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AzkarModel {
-  String? title;
-  String? subTitle;
-  String? zekr;
-  String? aya;
-  int? counter;
-  int startCounter = 0;
+  final int id;
+  final String category;
+  final String audio;
+  final String filename;
+  final List<AzkarItem> array;
 
   AzkarModel({
-    this.title,
-    this.subTitle,
-    this.zekr,
-    this.aya,
-    this.counter,
-    required this.startCounter,
+    required this.id,
+    required this.category,
+    required this.audio,
+    required this.filename,
+    required this.array,
   });
-  AzkarModel.fromJson(DocumentSnapshot json) {
-    final data = json.data() as Map<String, dynamic>;
+  factory AzkarModel.fromJson(Map<String, dynamic> json) {
+    return AzkarModel(
+      id: json['id'],
+      category: json['category'],
+      audio: json['audio'],
+      filename: json['filename'],
+      array:
+          (json['array'] as List)
+              .map((item) => AzkarItem.fromJson(item))
+              .toList(),
+    );
+  }
+}
 
-    title = data['title'];
-    subTitle = data['subTitle'];
-    zekr = data['zekr'];
-    aya = data['aya'];
-    counter = data['counter'];
+class AzkarItem {
+  final int id;
+  final String text;
+  final int count;
+  int startCounter;
+  final String audio;
+  final String filename;
+
+  AzkarItem({
+    required this.id,
+    required this.text,
+    required this.count,
+    required this.audio,
+    required this.filename,
+    this.startCounter = 0,
+  });
+
+  factory AzkarItem.fromJson(Map<String, dynamic> json) {
+    return AzkarItem(
+      id: json['id'],
+      text: json['text'],
+      count: json['count'],
+      audio: json['audio'],
+      filename: json['filename'],
+    );
   }
 }

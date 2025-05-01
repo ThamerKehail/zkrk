@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+
+import '../../model/azkar_model.dart';
 
 class HomeController extends GetxController {
   late ScrollController scrollController;
@@ -10,6 +15,19 @@ class HomeController extends GetxController {
     super.onInit();
     scrollController = ScrollController();
     scrollController.addListener(_scrollListener);
+    loadAzkarFromAssets();
+  }
+
+  var azkar = <AzkarModel>[].obs;
+
+  Future<void> loadAzkarFromAssets() async {
+    final String jsonString = await rootBundle.loadString('assets/athkar.json');
+    final List<dynamic> jsonData = json.decode(jsonString);
+    print(jsonData);
+    var data = jsonData.map((json) => AzkarModel.fromJson(json)).toList();
+
+    azkar.addAll(data);
+    print(azkar.length);
   }
 
   void _scrollListener() {

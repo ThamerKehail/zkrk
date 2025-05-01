@@ -170,10 +170,15 @@ class HomeScreen extends GetView<HomeController> {
                       alignment: WrapAlignment.spaceBetween,
                       runAlignment: WrapAlignment.start,
 
-                      children: [
-                        GestureDetector(
+                      children: List.generate(controller.azkar.length, (index) {
+                        return GestureDetector(
                           onTap: () {
-                            Get.to(() => AzkarPage());
+                            Get.to(
+                              () => AzkarPage(
+                                azkar: controller.azkar[index].array,
+                                title: controller.azkar[index].category,
+                              ),
+                            );
                           },
                           child: Container(
                             width: MediaQuery.of(context).size.width / 2.3,
@@ -190,7 +195,7 @@ class HomeScreen extends GetView<HomeController> {
                               ),
                             ),
                             child: Text(
-                              "أذكار الصباح ",
+                              controller.azkar[index].category,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,
@@ -198,38 +203,10 @@ class HomeScreen extends GetView<HomeController> {
                               ),
                             ),
                           ),
-                        ),
-                        Container(
-                          width: MediaQuery.of(context).size.width / 2.3,
-                          padding: EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 8,
-                          ),
-
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: secondPrimaryColor,
-                              width: 3,
-                            ),
-                          ),
-                          child: Text(
-                            "أذكار الصباح",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
+                        );
+                      }),
                     ),
                   ),
-                  Container(height: 150, width: 400, color: Color(0xFF2F4770)),
-                  Container(height: 150, width: 400, color: Color(0xFF2F4770)),
-                  Container(height: 150, width: 400, color: Color(0xFF2F4770)),
-                  Container(height: 150, width: 400, color: Color(0xFF2F4770)),
-                  Container(height: 150, width: 400, color: Color(0xFF2F4770)),
                 ],
               ),
             ),

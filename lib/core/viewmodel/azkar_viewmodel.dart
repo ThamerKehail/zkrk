@@ -1,82 +1,167 @@
-// azkar_controller.dart
+import 'dart:convert';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:zkrk/core/services/azkar_service.dart';
 import 'package:zkrk/model/azkar_model.dart';
 
 class AzkarController extends GetxController {
   RxBool _isLoading = false.obs;
   RxBool get isLoading => _isLoading;
+  PageController pageController = PageController();
 
-  var azkar = <AzkarModel>[].obs;
+  void nextPage() {
+    if (currentIndex.value < azkar.length - 1) {
+      // Replace 4 with your page count - 1
+      currentIndex.value++;
+      pageController.animateToPage(
+        currentIndex.value,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.ease,
+      );
+    }
+  }
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  RxBool isPlaying = false.obs;
+
+  Future<void> togglePlay(String path) async {
+    if (isPlaying.value) {
+      await _audioPlayer.pause();
+    } else {
+      await _audioPlayer.play(AssetSource(path));
+    }
+    isPlaying.value = !isPlaying.value;
+  }
+
+  pressZekr() {
+    if (isDone(currentIndex.value)) {
+      // nextPage();
+    } else {
+      incrementCounter(currentIndex.value);
+    }
+  }
+
+  var azkar = <AzkarItem>[].obs;
+  String numberToArabicTimes(int number) {
+    if (number < 1 || number > 100) return '';
+
+    final units = [
+      '',
+      'واحدة',
+      'اثنتان',
+      'ثلاث',
+      'أربع',
+      'خمس',
+      'ست',
+      'سبع',
+      'ثمان',
+      'تسع',
+    ];
+
+    final tens = [
+      '',
+      'عشر',
+      'عشرون',
+      'ثلاثون',
+      'أربعون',
+      'خمسون',
+      'ستون',
+      'سبعون',
+      'ثمانون',
+      'تسعون',
+      'مئة',
+    ];
+
+    if (number == 1) return 'مرة';
+    if (number == 2) return 'مرتان';
+    if (number >= 3 && number <= 9) {
+      return '${units[number]} مرات';
+    }
+    if (number == 10) return 'عشر مرات';
+
+    if (number > 10 && number < 100) {
+      int unit = number % 10;
+      int ten = number ~/ 10;
+
+      if (unit == 0) {
+        return '${tens[ten]} مرة';
+      } else {
+        return '${units[unit]} و${tens[ten]} مرة';
+      }
+    }
+
+    if (number == 100) return 'مئة مرة';
+
+    return '';
+  }
+
+  loadAzkar(List<AzkarItem> azkar) async {
+    this.azkar.value = azkar;
+    counters.value = azkar.map((e) => 0.obs).toList();
+  }
 
   RxInt counter = 0.obs;
   var counters = <RxInt?>[].obs;
 
-  int currentIndex = 0;
+  RxInt currentIndex = 0.obs;
 
   changeIndex(int index) {
-    currentIndex = index;
+    currentIndex.value = index;
   }
 
   RxBool isCounter = false.obs;
 
-  checkIsCounter() {
-    isCounter.value = counters[currentIndex] != null;
-  }
-
-  addCounter() {
-    int limit = azkar[currentIndex].counter ?? 0;
-    int x = azkar[currentIndex].startCounter ?? 1;
-    print("x: $x");
-    print("limit: $limit");
-    azkar[currentIndex].startCounter++;
-    if (x < limit) {
-      x++;
-    } else {
-      Get.snackbar("Limit Reached", "You have reached the limit of $limit");
-    }
-  }
-
-  resetCounter() {
+  resetCounter(int index) {
     counter.value = 0;
+    counters[index]?.value = 0;
   }
 
   @override
   onInit() {
     super.onInit();
-    _getAzkar();
+    _audioPlayer.onPlayerComplete.listen((event) {
+      print("✅ Audio finished playing");
+
+      // Example: go to next zekr automatically
+      if (isDone(currentIndex.value)) {
+        nextPage();
+      }
+    });
+    // _getAzkar();
+    // loadAzkarFromAssets();
+  }
+
+  @override
+  onClose() {
+    _audioPlayer.dispose();
+  }
+
+  Future<void> loadAzkarFromAssets() async {
+    final String jsonString = await rootBundle.loadString('assets/athkar.json');
+    final List<dynamic> jsonData = json.decode(jsonString);
+    print(jsonData);
+    var data = jsonData.map((json) => AzkarModel.fromJson(json)).toList();
+    azkar.value = data[0].array;
+    counters.value = azkar.map((e) => e.count != null ? 0.obs : null).toList();
   }
 
   void incrementCounter(int index) {
     print("object");
     final counter = counters[index];
-    final max = azkar[index].counter;
+    final max = azkar[index].count;
     print(counter);
-    if (counter != null && max != null && counter.value < max) {
+    if (counter != null && counter.value < max) {
       counter.value++;
+    }
+    if (counter!.value == max) {
+      nextPage();
     }
   }
 
   bool isDone(int index) {
     final counter = counters[index];
-    final max = azkar[index].counter;
-    return counter != null && max != null && counter.value >= max;
-  }
-
-  _getAzkar() async {
-    _isLoading.value = true;
-    await AzkarServices().getAzkar().then((data) {
-      for (var element in data) {
-        AzkarModel azkarModel = AzkarModel.fromJson(element);
-        azkar.add(azkarModel);
-      }
-      counters.value =
-          azkar.map((e) => e.counter != null ? 0.obs : null).toList();
-
-      update();
-      print(azkar);
-      checkIsCounter();
-    });
-    _isLoading.value = false;
+    final max = azkar[index].count;
+    return counter != null && counter.value >= max;
   }
 }
