@@ -32,6 +32,47 @@ class PrayerTimeController extends GetxController {
     _getUserLocation();
   }
 
+  Map<String, String>? getCurrentPrayerWithFormattedTime() {
+    final now = DateTime.now();
+    final DateFormat formatter = DateFormat('HH:mm');
+
+    final Map<String, String?> times = {
+      'Fajr': prayerTimes.value.timings?.fajr,
+      'Dhuhr': prayerTimes.value.timings?.dhuhr,
+      'Asr': prayerTimes.value.timings?.asr,
+      'Maghrib': prayerTimes.value.timings?.maghrib,
+      'Isha': prayerTimes.value.timings?.isha,
+    };
+
+    final convertedTimes =
+        times.entries
+            .where((e) => e.value != null)
+            .map((e) => MapEntry(e.key, _convertTimeStringToDateTime(e.value!)))
+            .toList()
+          ..sort((a, b) => a.value.compareTo(b.value));
+
+    for (int i = 0; i < convertedTimes.length; i++) {
+      final current = convertedTimes[i];
+      final next = i + 1 < convertedTimes.length ? convertedTimes[i + 1] : null;
+
+      if (next != null) {
+        if (now.isAfter(current.value) && now.isBefore(next.value)) {
+          return {
+            convertToArabic(current.key): formatter.format(current.value),
+          };
+        }
+      } else {
+        if (now.isAfter(current.value)) {
+          return {
+            convertToArabic(current.key): formatter.format(current.value),
+          };
+        }
+      }
+    }
+
+    return null; // If it's before Fajr
+  }
+
   void startTimer(DateTime targetTime) {
     prayerTime = targetTime;
 
@@ -39,6 +80,12 @@ class PrayerTimeController extends GetxController {
     _timer = Timer.periodic(Duration(seconds: 1), (_) {
       _updateRemainingTime();
     });
+  }
+
+  String getArabicMonthName() {
+    final now = DateTime.now();
+    final formatter = DateFormat.MMMM('ar'); // 'MMMM' gives full month name
+    return formatter.format(now);
   }
 
   DateTime _convertTimeStringToDateTime(String time) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:zkrk/helper/color.dart';
 import '../../core/viewmodel/azkar_viewmodel.dart';
+import '../../core/viewmodel/prayer_time_view_model.dart';
 import '../../model/azkar_model.dart';
 
 class AzkarPage extends StatefulWidget {
@@ -17,6 +18,8 @@ class AzkarPage extends StatefulWidget {
 
 class _AzkarPageState extends State<AzkarPage> {
   final AzkarController controller = Get.find();
+  final PrayerTimeController prayerTimeController = Get.find();
+
   @override
   void initState() {
     controller.loadAzkar(widget.azkar);
@@ -120,7 +123,7 @@ class _AzkarPageState extends State<AzkarPage> {
                           vertical: 4,
                         ),
                         child: Text(
-                          "العصر بعد 1:58:16",
+                          '${prayerTimeController.nextPrayer.value} بعد ${prayerTimeController.remainingTime.value}',
                           style: TextStyle(
                             color: Colors.yellowAccent,
                             fontWeight: FontWeight.bold,

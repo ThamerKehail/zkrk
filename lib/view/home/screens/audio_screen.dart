@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:get/get.dart';
+
+import '../../../core/viewmodel/remote_config_viewmodel.dart';
 
 class AudioScreen extends StatefulWidget {
   @override
@@ -8,6 +11,8 @@ class AudioScreen extends StatefulWidget {
 }
 
 class _AudioScreenState extends State<AudioScreen> {
+  final remoteConfigController = Get.put(RemoteConfigController());
+
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
@@ -36,11 +41,7 @@ class _AudioScreenState extends State<AudioScreen> {
     if (_isPlaying) {
       await _audioPlayer.pause();
     } else {
-      await _audioPlayer.play(
-        UrlSource(
-          'https://audio-samples.github.io/samples/mp3/blizzard_unconditional/sample-0.mp3',
-        ),
-      );
+      await _audioPlayer.play(UrlSource(remoteConfigController.audioUrl.value));
     }
     setState(() {
       _isPlaying = !_isPlaying;
@@ -57,7 +58,7 @@ class _AudioScreenState extends State<AudioScreen> {
             children: [
               // Background Image
               Image.network(
-                'https://strapi.dhiwise.com/uploads/Sliver_To_Box_Adapter_class_OG_Image_cada4539fe.png',
+                remoteConfigController.imageUrl.value,
                 fit: BoxFit.cover,
               ),
               // Blur effect
@@ -148,12 +149,26 @@ class _AudioScreenState extends State<AudioScreen> {
               height: 250,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: NetworkImage(
-                    "https://strapi.dhiwise.com/uploads/Sliver_To_Box_Adapter_class_OG_Image_cada4539fe.png",
+                  image: NetworkImage(remoteConfigController.imageUrl.value),
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  remoteConfigController.description.value,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 10,
+                        color: Colors.black45,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              child: Center(child: Text("اللهم اكفينا بحلالك عن حرامك")),
             ),
           ),
         ],
